@@ -27,6 +27,9 @@ import screenObtainer from './ScreenObtainer';
 
 const logger = getLogger(__filename);
 
+var audioContext1 = new (window.AudioContext || window.webkitAudioContext)();
+audioContext1.audioWorklet.addModule('bypass-processor.js');
+
 // Require adapter only for certain browsers. This is being done for
 // react-native, which has its own shims, and while browsers are being migrated
 // over to use adapter's shims.
@@ -708,10 +711,15 @@ class RTCUtils extends Listenable {
 
             if (audioTracks.length) {
                 const audioStream = new MediaStream(audioTracks);
+                var microphoneSource = audioContext1.createMediaStreamSource(audioStream);
+                var destinationStreamSource = audioContext1.createMediaStreamDestination();
+                const bypasser = new AudioWorkletNode(audioContext1,'bypass-processor');
+                microphoneSource.connect(bypasser).connect(destinationStreamSource);
+                console.info("used processed stream")
 
                 mediaStreamsMetaData.push({
-                    stream: audioStream,
-                    track: audioStream.getAudioTracks()[0],
+                    stream: destinationStreamSource.stream,
+                    track: destinationStreamSource.stream.getAudioTracks()[0],
                     effects: otherOptions.effects
                 });
             }

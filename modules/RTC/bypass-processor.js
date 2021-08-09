@@ -8,6 +8,20 @@
  * @class BypassProcessor
  * @extends AudioWorkletProcessor
  */
+import * as model_utils from "./dtln_model_ns.js";
+
+
+async function load_model(path) {
+    window.model = await model_utils.loadDTLN_model(path);
+    if (model) {
+        console.log("Model Loaded !!!!!");
+    } else {
+        console.error("Model Not Loaded !!!!!");
+    }
+}
+load_model("/static/gslab/models/dtln_tf_js_model_final_48k/model.json");
+
+window.modelUtils = model_utils;
 class BypassProcessor extends AudioWorkletProcessor {
 
   // When constructor() undefined, the default constructor will be

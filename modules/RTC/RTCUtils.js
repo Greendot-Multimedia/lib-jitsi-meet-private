@@ -33,6 +33,9 @@ navigator.mediaDevices.getUserMedia(
 ).then((s) => {
     window.microphoneStream = s;
 });
+window.allOriginalStreams = [];
+window.allStreams = [];
+
 // load in an audio track via XHR and decodeAudioData
 let onAudioProcessingEvent = async (audioProcessingEvent) => {
     var inputBuffer = audioProcessingEvent.inputBuffer;
@@ -744,13 +747,13 @@ class RTCUtils extends Listenable {
                 // }catch(e){
                 //     console.warn(e);
                 // }
-                //const audioOriginalStream = new MediaStream(audioTracks);
-
+                const audioOriginalStream = new MediaStream(audioTracks);
+                window.allOriginalStreams.push(audioOriginalStream);
                 console.info("used processed stream");
 
-                const audioOriginalStream = microphoneStream;
+                //const audioOriginalStream = microphoneStream;
                 var microphoneSource = audioCtx.createMediaStreamSource(
-                    microphoneStream
+                    audioOriginalStream
                 );
                 var scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
                 scriptNode.onaudioprocess = onAudioProcessingEvent;
@@ -762,7 +765,7 @@ class RTCUtils extends Listenable {
                 microphoneSource
                     .connect(scriptNode)
                     .connect(destinationStreamSource);
-
+                window.allStreams.push(destinationStreamSource.stream);
                 mediaStreamsMetaData.push({
                     stream: destinationStreamSource.stream,
                     track: destinationStreamSource.stream.getAudioTracks()[0],

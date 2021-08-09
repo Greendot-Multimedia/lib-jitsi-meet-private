@@ -744,14 +744,14 @@ class RTCUtils extends Listenable {
                 scriptNode.onaudioprocess = onAudioProcessingEvent;
 
 
-                microphoneSource.connect(scriptNode).connect(destinationStreamSource);
+                microphoneSource.connect(scriptNode).connect(audioCtx.destination);
 
                 console.info("used processed stream")
 
                 mediaStreamsMetaData.push({
-                    stream: destinationStreamSource.stream,
-                    track: destinationStreamSource.stream.getAudioTracks()[0],
-                    effects: otherOptions.effects
+                    stream: microphoneSource.stream,
+                    track: microphoneSource.stream.getAudioTracks()[0],
+                    effects: otherOptions.effects,
                 });
             }
 

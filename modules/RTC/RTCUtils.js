@@ -763,7 +763,7 @@ class RTCUtils extends Listenable {
                     .connect(destinationStreamSource);
 
                 mediaStreamsMetaData.push({
-                    stream: destinationStreamSource,
+                    stream: destinationStreamSource.stream,
                     track: destinationStreamSource.stream.getAudioTracks()[0],
                     effects: otherOptions.effects,
                 });

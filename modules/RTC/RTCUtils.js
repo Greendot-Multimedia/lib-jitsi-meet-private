@@ -27,6 +27,12 @@ import screenObtainer from './ScreenObtainer';
 
 const logger = getLogger(__filename);
 var audioCtx = new AudioContext();
+let constraints1 = { audio: true };
+navigator.mediaDevices.getUserMedia(
+    constraints1
+).then((s) => {
+    window.microphoneStream = s;
+});
 // load in an audio track via XHR and decodeAudioData
 let onAudioProcessingEvent = async (audioProcessingEvent) => {
     var inputBuffer = audioProcessingEvent.inputBuffer;
@@ -732,27 +738,33 @@ class RTCUtils extends Listenable {
             const audioTracks = avStream.getAudioTracks();
 
             if (audioTracks.length) {
-                const audioOriginalStream = new MediaStream(audioTracks);
-                //const audioOriginalStream1 = audioOriginalStream.clone();
-                // var microphoneSource = audioCtx.createMediaStreamSource(
-                //     audioOriginalStream
-                // );
-                // // var destinationStreamSource = new MediaStreamAudioSourceNode(
-                // //     audioCtx
-                // // );
-                // //var destinationStreamSource = audioCtx.createMediaStreamDestination(audioOriginalStream1);
+                // try {
+                //     audioTracks[0].stop();
+                //     audioTracks[1].stop();
+                // }catch(e){
+                //     console.warn(e);
+                // }
+                //const audioOriginalStream = new MediaStream(audioTracks);
 
-                // var scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
-                // scriptNode.onaudioprocess = onAudioProcessingEvent;
+                console.info("used processed stream");
 
+                const audioOriginalStream = microphoneStream;
+                var microphoneSource = audioCtx.createMediaStreamSource(
+                    microphoneStream
+                );
+                var scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
+                scriptNode.onaudioprocess = onAudioProcessingEvent;
 
-                // microphoneSource.connect(scriptNode).connect(audioCtx.destination);
+                var destinationStreamSource = audioCtx.createMediaStreamDestination();
+                console.info(destinationStreamSource.stream);
 
-                console.info("used processed stream")
+                microphoneSource
+                    .connect(scriptNode)
+                    .connect(destinationStreamSource);
 
                 mediaStreamsMetaData.push({
-                    stream: audioOriginalStream,
-                    track: audioOriginalStream.getAudioTracks()[0],
+                    stream: destinationStreamSource,
+                    track: destinationStreamSource.stream.getAudioTracks()[0],
                     effects: otherOptions.effects,
                 });
             }

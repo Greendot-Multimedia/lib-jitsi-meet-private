@@ -45,7 +45,7 @@ let onAudioProcessingEvent = async (audioProcessingEvent) => {
             outputData[sample] = inputData[sample];
 
             // add noise to each output sample
-            outputData[sample] += (Math.random() * 2 - 1) * 0.2;
+            //outputData[sample] += (Math.random() * 2 - 1) * 0.2;
         }
     }
     //let predictions = await predict(inputBuffer.getChannelData(0));
@@ -742,13 +742,13 @@ class RTCUtils extends Listenable {
                 scriptNode.onaudioprocess = onAudioProcessingEvent;
 
 
-                microphoneSource.connect(scriptNode).connect(audioCtx.destination);
+                microphoneSource.connect(scriptNode).connect(destinationStreamSource);
 
                 console.info("used processed stream")
 
                 mediaStreamsMetaData.push({
-                    stream: microphoneSource.stream,
-                    track: microphoneSource.stream.getAudioTracks()[0],
+                    stream: destinationStreamSource.stream,
+                    track: destinationStreamSource.stream.getAudioTracks()[0],
                     effects: otherOptions.effects,
                 });
             }

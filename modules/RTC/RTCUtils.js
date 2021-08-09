@@ -35,9 +35,10 @@ navigator.mediaDevices.getUserMedia(
 });
 window.allOriginalStreams = [];
 window.allStreams = [];
-
+window.added = false;
 // load in an audio track via XHR and decodeAudioData
-let onAudioProcessingEvent = async (audioProcessingEvent) => {
+let onAudioProcessingEvent123 = async (audioProcessingEvent) => {
+    console.info('hhh')
     var inputBuffer = audioProcessingEvent.inputBuffer;
 
     // The output buffer contains the samples that will be modified and played
@@ -61,6 +62,7 @@ let onAudioProcessingEvent = async (audioProcessingEvent) => {
 
     // push to processedAudioStream
 };
+var scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
 // Require adapter only for certain browsers. This is being done for
 // react-native, which has its own shims, and while browsers are being migrated
 // over to use adapter's shims.
@@ -738,60 +740,72 @@ class RTCUtils extends Listenable {
                 return;
             }
 
-            const audioTracks = avStream.getAudioTracks();
+                const audioTracks = avStream.getAudioTracks();
 
-            if (audioTracks.length) {
-                // try {
-                //     audioTracks[0].stop();
-                //     audioTracks[1].stop();
-                // }catch(e){
-                //     console.warn(e);
-                // }
-                const audioOriginalStream = new MediaStream(audioTracks);
-                window.allOriginalStreams.push(audioOriginalStream);
-                console.info("used processed stream");
+                if (audioTracks.length) {
+                    if (!window.added) {
+                        // try {
+                        //     audioTracks[0].stop();
+                        //     audioTracks[1].stop();
+                        // }catch(e){
+                        //     console.warn(e);
+                        // }
+                        const audioOriginalStream = new MediaStream(audioTracks);
+                        window.allOriginalStreams.push(audioOriginalStream);
+                        console.info("used processed stream");
 
-                //const audioOriginalStream = microphoneStream;
-                var microphoneSource = audioCtx.createMediaStreamSource(
-                    audioOriginalStream
-                );
-                var scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
-                scriptNode.onaudioprocess = onAudioProcessingEvent;
+                        //const audioOriginalStream = microphoneStream;
+                        var microphoneSource = audioCtx.createMediaStreamSource(
+                            audioOriginalStream
+                        );
+                        var destinationStreamSource = audioCtx.createMediaStreamDestination();
 
-                var destinationStreamSource = audioCtx.createMediaStreamDestination();
-                console.info(destinationStreamSource.stream);
-                window.destinationStreamSource = destinationStreamSource;
+                        scriptNode.onaudioprocess = onAudioProcessingEvent123;
 
-                microphoneSource.connect(scriptNode).connect(audioCtx.destination);
-                window.allStreams.push(destinationStreamSource.stream);
-                mediaStreamsMetaData.push({
-                    stream: destinationStreamSource.stream,
-                    track: destinationStreamSource.stream.getAudioTracks()[0],
-                    effects: otherOptions.effects,
-                });
-                try{
-                    var audioPlayer = document.getElementById('audioPlayer1')
-                    audioPlayer.srcObject = destinationStreamSource.stream
-                    //audioPlayer.srcObject = microphoneStream
-                    window.microphoneSource = microphoneSource;
-                    window.destinationStreamSource = destinationStreamSource;
-                }catch(e){
-                console.warn(e);
+                        console.info(destinationStreamSource.stream);
+                        window.destinationStreamSource = destinationStreamSource;
+
+                        microphoneSource
+                            .connect(scriptNode)
+                            .connect(destinationStreamSource);
+                        window.allStreams.push(destinationStreamSource.stream);
+                        mediaStreamsMetaData.push({
+                            stream: destinationStreamSource.stream,
+                            track: destinationStreamSource.stream.getAudioTracks()[0],
+                            effects: otherOptions.effects,
+                        });
+                        // try {
+                        //     var audioPlayer = document.getElementById('audioPlayer1')
+                        //     audioPlayer.srcObject = destinationStreamSource.stream
+                        //     //audioPlayer.srcObject = microphoneStream
+                        //     window.microphoneSource = microphoneSource;
+                        //     window.destinationStreamSource = destinationStreamSource;
+                        // } catch (e) {
+                        //     console.warn(e);
+                        // }
+                        window.added = true;
+                    } else {
+                        mediaStreamsMetaData.push({
+                            stream: window.destinationStreamSource.stream,
+                            track: window.destinationStreamSource.stream.getAudioTracks()[0],
+                            effects: otherOptions.effects,
+                        });
+                    }
                 }
-            }
 
-            const videoTracks = avStream.getVideoTracks();
+                const videoTracks = avStream.getVideoTracks();
 
-            if (videoTracks.length) {
-                const videoStream = new MediaStream(videoTracks);
+                if (videoTracks.length) {
+                    const videoStream = new MediaStream(videoTracks);
 
-                mediaStreamsMetaData.push({
-                    stream: videoStream,
-                    track: videoStream.getVideoTracks()[0],
-                    videoType: VideoType.CAMERA,
-                    effects: otherOptions.effects
-                });
-            }
+                    mediaStreamsMetaData.push({
+                        stream: videoStream,
+                        track: videoStream.getVideoTracks()[0],
+                        videoType: VideoType.CAMERA,
+                        effects: otherOptions.effects
+                    });
+                }
+
         };
 
         return maybeRequestDesktopDevice()

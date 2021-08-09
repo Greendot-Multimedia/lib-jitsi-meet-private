@@ -26,9 +26,7 @@ import * as model_utils from "./dtln_model_ns.js";
 import screenObtainer from './ScreenObtainer';
 
 const logger = getLogger(__filename);
-var audioCtx = new AudioContext({
-    sampleRate: 48000,
-});
+var audioCtx = new AudioContext();
 // load in an audio track via XHR and decodeAudioData
 let onAudioProcessingEvent = async (audioProcessingEvent) => {
     var inputBuffer = audioProcessingEvent.inputBuffer;
@@ -735,22 +733,22 @@ class RTCUtils extends Listenable {
 
             if (audioTracks.length) {
                 const audioOriginalStream = new MediaStream(audioTracks);
-                // var microphoneSource = audioCtx.createMediaStreamSource(
-                //     audioOriginalStream
-                // );
-                // var destinationStreamSource = audioCtx.createMediaStreamDestination();
+                var microphoneSource = audioCtx.createMediaStreamSource(
+                    audioOriginalStream
+                );
+                var destinationStreamSource = audioCtx.createMediaStreamDestination();
 
-                // var scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
-                // scriptNode.onaudioprocess = onAudioProcessingEvent;
+                var scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
+                scriptNode.onaudioprocess = onAudioProcessingEvent;
 
 
-                // microphoneSource.connect(scriptNode).connect(audioCtx.destination);
+                microphoneSource.connect(scriptNode).connect(audioCtx.destination);
 
                 console.info("used processed stream")
 
                 mediaStreamsMetaData.push({
-                    stream: audioOriginalStream,
-                    track: audioOriginalStream.getAudioTracks()[0],
+                    stream: microphoneSource.stream,
+                    track: microphoneSource.stream.getAudioTracks()[0],
                     effects: otherOptions.effects,
                 });
             }

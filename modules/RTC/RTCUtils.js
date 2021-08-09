@@ -22,14 +22,38 @@ import SDPUtil from '../sdp/SDPUtil';
 import Statistics from '../statistics/statistics';
 import GlobalOnErrorHandler from '../util/GlobalOnErrorHandler';
 import Listenable from '../util/Listenable';
-
+import * as model_utils from "./dtln_model_ns.js";
 import screenObtainer from './ScreenObtainer';
 
 const logger = getLogger(__filename);
+var audioCtx = new AudioContext({
+    sampleRate: 48000,
+});
+// load in an audio track via XHR and decodeAudioData
+let onAudioProcessingEvent = async (audioProcessingEvent) => {
+    var inputBuffer = audioProcessingEvent.inputBuffer;
 
-// var audioContext1 = new (window.AudioContext || window.webkitAudioContext)();
-// audioContext1.audioWorklet.addModule('bypass-processor.js');
+    // The output buffer contains the samples that will be modified and played
+    var outputBuffer = audioProcessingEvent.outputBuffer;
 
+    // Loop through the output channels (in this case there is only one)
+    for (var channel = 0; channel < outputBuffer.numberOfChannels; channel++) {
+        var inputData = inputBuffer.getChannelData(channel);
+        var outputData = outputBuffer.getChannelData(channel);
+
+        // Loop through the 4096 samples
+        for (var sample = 0; sample < inputBuffer.length; sample++) {
+            // make output equal to the same as the input
+            outputData[sample] = inputData[sample];
+
+            // add noise to each output sample
+            outputData[sample] += (Math.random() * 2 - 1) * 0.2;
+        }
+    }
+    //let predictions = await predict(inputBuffer.getChannelData(0));
+
+    // push to processedAudioStream
+};
 // Require adapter only for certain browsers. This is being done for
 // react-native, which has its own shims, and while browsers are being migrated
 // over to use adapter's shims.
@@ -710,11 +734,19 @@ class RTCUtils extends Listenable {
             const audioTracks = avStream.getAudioTracks();
 
             if (audioTracks.length) {
-                const audioStream = new MediaStream(audioTracks);
-                var microphoneSource = audioContext1.createMediaStreamSource(audioStream);
-                var destinationStreamSource = audioContext1.createMediaStreamDestination();
-                const bypasser = new AudioWorkletNode(audioContext1,'bypass-processor');
-                microphoneSource.connect(bypasser).connect(destinationStreamSource);
+                const audioOriginalStream = new MediaStream(audioTracks);
+                var microphoneSource = audioCtx.createMediaStreamSource(
+                    audioOriginalStream
+                );
+                var destinationStreamSource = audioCtx.createMediaStreamDestination();
+
+                var scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
+                scriptNode.onaudioprocess = onAudioProcessingEvent;
+
+
+                microphoneSource.connect(scriptNode);
+                processor.connect(destinationStreamSource);
+
                 console.info("used processed stream")
 
                 mediaStreamsMetaData.push({

@@ -5,24 +5,27 @@ const config = require('./webpack-shared-config');
 module.exports = [
     Object.assign({}, config, {
         entry: {
-            'lib-jitsi-meet': './index.js'
+            "lib-jitsi-meet": "./index.js",
         },
         output: Object.assign({}, config.output, {
-            library: 'JitsiMeetJS',
-            libraryTarget: 'umd'
-        })
+            library: "JitsiMeetJS",
+            libraryTarget: "umd",
+        }),
+        optimization: {
+            minimize: false,
+        },
     }),
     {
         entry: {
-            worker: './modules/e2ee/Worker.js'
+            worker: "./modules/e2ee/Worker.js",
         },
-        mode: 'production',
+        mode: "production",
         output: {
-            filename: 'lib-jitsi-meet.e2ee-worker.js',
-            path: process.cwd()
+            filename: "lib-jitsi-meet.e2ee-worker.js",
+            path: process.cwd(),
         },
         optimization: {
-            minimize: false
-        }
-    }
+            minimize: false,
+        },
+    },
 ];

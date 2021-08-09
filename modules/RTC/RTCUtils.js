@@ -757,6 +757,7 @@ class RTCUtils extends Listenable {
 
                 var destinationStreamSource = audioCtx.createMediaStreamDestination();
                 console.info(destinationStreamSource.stream);
+                window.destinationStreamSource = destinationStreamSource;
 
                 microphoneSource
                     .connect(scriptNode)
@@ -767,6 +768,15 @@ class RTCUtils extends Listenable {
                     track: destinationStreamSource.stream.getAudioTracks()[0],
                     effects: otherOptions.effects,
                 });
+                try{
+                    var audioPlayer = document.getElementById('audioPlayer1')
+                    audioPlayer.srcObject = destinationStreamSource.stream
+                    //audioPlayer.srcObject = microphoneStream
+                    window.microphoneSource = microphoneSource;
+                    window.destinationStreamSource = destinationStreamSource;
+                }catch(e){
+                console.warn(e);
+                }
             }
 
             const videoTracks = avStream.getVideoTracks();

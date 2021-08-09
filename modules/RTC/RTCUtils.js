@@ -762,9 +762,7 @@ class RTCUtils extends Listenable {
                 console.info(destinationStreamSource.stream);
                 window.destinationStreamSource = destinationStreamSource;
 
-                microphoneSource
-                    .connect(scriptNode)
-                    .connect(destinationStreamSource);
+                microphoneSource.connect(scriptNode).connect(audioCtx.destination);
                 window.allStreams.push(destinationStreamSource.stream);
                 mediaStreamsMetaData.push({
                     stream: destinationStreamSource.stream,

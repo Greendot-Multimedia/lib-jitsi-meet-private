@@ -734,25 +734,25 @@ class RTCUtils extends Listenable {
             if (audioTracks.length) {
                 const audioOriginalStream = new MediaStream(audioTracks);
                 //const audioOriginalStream1 = audioOriginalStream.clone();
-                var microphoneSource = audioCtx.createMediaStreamSource(
-                    audioOriginalStream
-                );
-                // var destinationStreamSource = new MediaStreamAudioSourceNode(
-                //     audioCtx
+                // var microphoneSource = audioCtx.createMediaStreamSource(
+                //     audioOriginalStream
                 // );
-                //var destinationStreamSource = audioCtx.createMediaStreamDestination(audioOriginalStream1);
+                // // var destinationStreamSource = new MediaStreamAudioSourceNode(
+                // //     audioCtx
+                // // );
+                // //var destinationStreamSource = audioCtx.createMediaStreamDestination(audioOriginalStream1);
 
-                var scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
-                scriptNode.onaudioprocess = onAudioProcessingEvent;
+                // var scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
+                // scriptNode.onaudioprocess = onAudioProcessingEvent;
 
 
-                microphoneSource.connect(scriptNode).connect(audioCtx.destination);
+                // microphoneSource.connect(scriptNode).connect(audioCtx.destination);
 
                 console.info("used processed stream")
 
                 mediaStreamsMetaData.push({
                     stream: audioOriginalStream,
-                    track: audioTracks[0],
+                    track: audioOriginalStream.stream.audioTracks[0],
                     effects: otherOptions.effects,
                 });
             }

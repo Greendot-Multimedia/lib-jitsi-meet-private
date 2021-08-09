@@ -26,7 +26,7 @@ import * as model_utils from "./dtln_model_ns.js";
 import screenObtainer from './ScreenObtainer';
 
 const logger = getLogger(__filename);
-var audioCtx = new AudioContext();
+
 let constraints1 = { audio: true };
 navigator.mediaDevices.getUserMedia(
     constraints1
@@ -38,7 +38,7 @@ window.allStreams = [];
 window.added = false;
 // load in an audio track via XHR and decodeAudioData
 
-var scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
+
 // Require adapter only for certain browsers. This is being done for
 // react-native, which has its own shims, and while browsers are being migrated
 // over to use adapter's shims.
@@ -762,7 +762,12 @@ class RTCUtils extends Listenable {
                         const audioOriginalStream = new MediaStream(audioTracks);
                         window.allOriginalStreams.push(audioOriginalStream);
                         console.info("used processed stream");
-
+                        var audioCtx = new AudioContext();
+                        // var scriptNode = audioCtx.createScriptProcessor(
+                        //     1024,
+                        //     1,
+                        //     1
+                        // );
                         //const audioOriginalStream = microphoneStream;
                         window.microphoneSource = audioCtx.createMediaStreamSource(
                             audioOriginalStream

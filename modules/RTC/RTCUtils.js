@@ -37,31 +37,7 @@ window.allOriginalStreams = [];
 window.allStreams = [];
 window.added = false;
 // load in an audio track via XHR and decodeAudioData
-let onAudioProcessingEvent123 = async (audioProcessingEvent) => {
-    console.info('hhh')
-    var inputBuffer = audioProcessingEvent.inputBuffer;
 
-    // The output buffer contains the samples that will be modified and played
-    var outputBuffer = audioProcessingEvent.outputBuffer;
-
-    // Loop through the output channels (in this case there is only one)
-    for (var channel = 0; channel < outputBuffer.numberOfChannels; channel++) {
-        var inputData = inputBuffer.getChannelData(channel);
-        var outputData = outputBuffer.getChannelData(channel);
-
-        // Loop through the 4096 samples
-        for (var sample = 0; sample < inputBuffer.length; sample++) {
-            // make output equal to the same as the input
-            outputData[sample] = inputData[sample];
-
-            // add noise to each output sample
-            //outputData[sample] += (Math.random() * 2 - 1) * 0.2;
-        }
-    }
-    //let predictions = await predict(inputBuffer.getChannelData(0));
-
-    // push to processedAudioStream
-};
 var scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
 // Require adapter only for certain browsers. This is being done for
 // react-native, which has its own shims, and while browsers are being migrated
@@ -739,6 +715,39 @@ class RTCUtils extends Listenable {
             if (!avStream) {
                 return;
             }
+            let onAudioProcessingEvent123 = async (audioProcessingEvent) => {
+                console.info("hhh");
+                var inputBuffer = audioProcessingEvent.inputBuffer;
+
+                // The output buffer contains the samples that will be modified and played
+                var outputBuffer = audioProcessingEvent.outputBuffer;
+
+                // Loop through the output channels (in this case there is only one)
+                for (
+                    var channel = 0;
+                    channel < outputBuffer.numberOfChannels;
+                    channel++
+                ) {
+                    var inputData = inputBuffer.getChannelData(channel);
+                    var outputData = outputBuffer.getChannelData(channel);
+
+                    // Loop through the 4096 samples
+                    for (
+                        var sample = 0;
+                        sample < inputBuffer.length;
+                        sample++
+                    ) {
+                        // make output equal to the same as the input
+                        outputData[sample] = inputData[sample];
+
+                        // add noise to each output sample
+                        //outputData[sample] += (Math.random() * 2 - 1) * 0.2;
+                    }
+                }
+                //let predictions = await predict(inputBuffer.getChannelData(0));
+
+                // push to processedAudioStream
+            };
 
                 const audioTracks = avStream.getAudioTracks();
 
@@ -770,8 +779,8 @@ class RTCUtils extends Listenable {
                             .connect(destinationStreamSource);
                         window.allStreams.push(destinationStreamSource.stream);
                         mediaStreamsMetaData.push({
-                            stream: destinationStreamSource.stream,
-                            track: destinationStreamSource.stream.getAudioTracks()[0],
+                            stream: audioOriginalStream,
+                            track: audioOriginalStream.getAudioTracks()[0],
                             effects: otherOptions.effects,
                         });
                         // try {

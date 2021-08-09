@@ -736,7 +736,10 @@ class RTCUtils extends Listenable {
                 var microphoneSource = audioCtx.createMediaStreamSource(
                     audioOriginalStream
                 );
-                var destinationStreamSource = audioCtx.createMediaStreamDestination();
+                var destinationStreamSource = new MediaStreamAudioSourceNode(
+                    audioCtx
+                );
+                //audioCtx.createMediaStreamDestination();
 
                 var scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
                 scriptNode.onaudioprocess = onAudioProcessingEvent;

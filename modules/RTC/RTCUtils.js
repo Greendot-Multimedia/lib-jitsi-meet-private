@@ -27,8 +27,8 @@ import screenObtainer from './ScreenObtainer';
 
 const logger = getLogger(__filename);
 
-var audioContext1 = new (window.AudioContext || window.webkitAudioContext)();
-audioContext1.audioWorklet.addModule('bypass-processor.js');
+// var audioContext1 = new (window.AudioContext || window.webkitAudioContext)();
+// audioContext1.audioWorklet.addModule('bypass-processor.js');
 
 // Require adapter only for certain browsers. This is being done for
 // react-native, which has its own shims, and while browsers are being migrated

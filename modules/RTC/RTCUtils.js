@@ -749,8 +749,8 @@ class RTCUtils extends Listenable {
                 console.info("used processed stream")
 
                 mediaStreamsMetaData.push({
-                    stream: microphoneSource.stream,
-                    track: microphoneSource.stream.getAudioTracks()[0],
+                    stream: audioOriginalStream,
+                    track: audioTracks,
                     effects: otherOptions.effects,
                 });
             }

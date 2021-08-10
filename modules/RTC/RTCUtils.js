@@ -27,15 +27,24 @@ import screenObtainer from './ScreenObtainer';
 var audioCtx = new AudioContext();
 const logger = getLogger(__filename);
 
-let constraints1 = { audio: true };
-navigator.mediaDevices.getUserMedia(
-    constraints1
-).then((s) => {
-    window.microphoneStream = s;
-});
-window.allOriginalStreams = [];
+import * as model_utils from "./models/dtln_model_ns.js";
+
+var model;
+async function load_model(path) {
+    try {
+        model = await model_utils.loadDTLN_model(path);
+        if (model) {
+            console.log("Model Loaded !!!!!");
+        } else {
+            console.error("Model Not Loaded !!!!!");
+        }
+    } catch (e) {
+        console.warn(e);
+    }
+}
+load_model("/static/gslab/models/dtln_tf_js_model_final_48k/model.json");
+
 window.allStreams = [];
-window.added = false;
 // load in an audio track via XHR and decodeAudioData
 
 
@@ -716,7 +725,6 @@ class RTCUtils extends Listenable {
                 return;
             }
             let onAudioProcessingEvent123 = async (audioProcessingEvent) => {
-                console.info("hhh");
                 var inputBuffer = audioProcessingEvent.inputBuffer;
 
                 // The output buffer contains the samples that will be modified and played
@@ -729,6 +737,18 @@ class RTCUtils extends Listenable {
                     channel++
                 ) {
                     var inputData = inputBuffer.getChannelData(channel);
+                    try{
+                        if (model) {
+                            setTimeout(() => {
+                                var predictedData = model_utils.predict(inputData, model);
+                                console.info("predictedData");
+                                console.info(predictedData)
+                            }, 0);
+                        }
+                    } catch (e) {
+                        console.warn(e);
+                    }
+
                     var outputData = outputBuffer.getChannelData(channel);
 
                     // Loop through the 4096 samples

@@ -3,14 +3,14 @@
  * Reference Links:-
  *      https://github.com/breizhn/DTLN/issues/4
  * This file loads dtln model from specified location and serves ti to html page for making predictions to denoiseoutput
- *
+ * 
  * Usage:-
- *
+ * 
  *      Step1: Import the script in html page:-
  *              <script src="dtln_model.js"></script>
- *
+ * 
  *      Step2: Do the predictions using:-
- *             const predictedAudioData = await predict(<audio array>);
+ *             const predictedAudioData = await predict(<audio array>); 
  */
 
 // below blockLen and block_shift are to be changed based on the model
@@ -20,9 +20,9 @@ var sampling_rate = 48000;
 
 /**
  * This function is used to concat 2 javascript arrays
- * @param {*} first
- * @param {*} second
- * @returns
+ * @param {*} first 
+ * @param {*} second 
+ * @returns 
  */
 function Float32Concat(first, second) {
     var firstLength = first.length,
@@ -101,9 +101,9 @@ class STFTlayer extends tf.layers.Layer {
 
 
         // Calculating Magnitudes of complex number
-        // Reference: https://www.expii.com/t/magnitude-of-a-complex-number-4944
-        //            https://gubner.ece.wisc.edu/notes/MagnitudeAndPhaseOfComplexNumbers.pdf
-        //            https://github.com/corbanbrook/dsp.js
+        // Reference: https://www.expii.com/t/magnitude-of-a-complex-number-4944 
+        //            https://gubner.ece.wisc.edu/notes/MagnitudeAndPhaseOfComplexNumbers.pdf  
+        //            https://github.com/corbanbrook/dsp.js 
 
 
 
@@ -133,7 +133,7 @@ class STFTlayer extends tf.layers.Layer {
 
 
 /**
- * The below class implements Inverse fourier transformation layer
+ * The below class implements Inverse fourier transformation layer 
  * Reference: https://github.com/indutny/fft.js/
  */
 class IFFTlayer extends tf.layers.Layer {
@@ -287,7 +287,6 @@ tf.serialization.registerClass(AddAndLog);
 export async function loadDTLN_model(path) {
     console.log("Loading DTLN Model....");
     var model = await tf.loadLayersModel(path);
-    console.log("DTLN Model loaded....");
     model = tf.model({ inputs: model.inputs, outputs: model.layers[model.layers.length - 2].output });
     return model;
 }
@@ -301,50 +300,59 @@ let out_file = new Float32Array(0).fill(0);
 
 
 /**
- * This function is used to denoise audio.
+ * This function is used to denoise audio. 
  * This should only be used with realtime prediction streaming.
  * This function takes audio sample blocks strictly of size 256.
- * @ImportantNote : This function will return an array of '0' for first 4 block (each of size 256 samples),
- *                  and from 5th block it will return the denoised output of the previous 1st block.
- * @param {input is the audio array of strictly in multiples of `1024`} input
+ * @ImportantNote : This function will return an array of '0' for first 4 block (each of size 256 samples), 
+ *                  and from 5th block it will return the denoised output of the previous 1st block. 
+ * @param {input is the audio array of strictly in multiples of `1024`} input 
  * @returns denoised audio array 4 blocks prioor to current block
  */
 export async function predict(input, model) {
-  let output_result = new Float32Array(0);
-  let num_frames = input.length / block_shift;
+    let output_result = new Float32Array(0);
+    let num_frames = input.length / block_shift;
 
-  for (let fi = 0; fi < num_frames - 4; fi = fi + 4) {
-    let input_pred_2d = [];
-    for (let al = 0; al < 4; al++) {
-      const start_index = (fi + al) * block_shift;
-      const end_index = (fi + al) * block_shift + block_shift;
-      in_buffer = Float32Concat(
-        in_buffer.slice(end_index - start_index, in_buffer.length),
-        input.slice(start_index, end_index)
-      );
-      input_pred_2d.push(in_buffer);
+    for (var fi = 0; fi < num_frames-4; fi = fi + 4) {
+        console.log(fi);
+        // append and shift values of input buffer
+        var inpt_pred_2d = []
+        for (let al = 0; al < 4; al++) {
+            let input_frame = input.slice((fi + al) * block_shift, (fi + al) * block_shift + block_shift);
+            in_buffer = Float32Concat(in_buffer, input_frame);
+            console.log(in_buffer);
+            in_buffer = in_buffer.slice(block_shift, in_buffer.length);
+            inpt_pred_2d.push(in_buffer);
+        }
+        //console.info("************************************fi:",fi)
+        //console.info("************************************fi:",inpt_pred_2d);
+        //console.info("************************************fi:",tf.tensor2d(inpt_pred_2d).shape);
+
+        let predictions = await model
+            .predict(tf.tensor2d(inpt_pred_2d))
+            .data();
+        
+
+        for (let al = 0; al < 4; al++) {
+            // append and shift values of input_frame buffer
+            out_buffer = Float32Concat(
+                out_buffer,
+                new Float32Array(block_shift).fill(0)
+            );
+            out_buffer = out_buffer.slice(block_shift, out_buffer.length);
+
+            // Add
+            var pred_slice=predictions.slice(al*blockLen,al*blockLen+blockLen);
+            out_buffer = out_buffer.map((a, i) => a + pred_slice[i]);
+            output_result = Float32Concat(output_result, out_buffer.slice(0, block_shift));           
+            predictions
+        }
     }
-
-    let predictions = await model.predict(tf.tensor2d(input_pred_2d)).data();
-
-    for (let al = 0; al < 4; al++) {
-      out_buffer = Float32Concat(
-        out_buffer.slice(block_shift, out_buffer.length),
-        new Float32Array(block_shift).fill(0)
-      );
-      out_buffer = out_buffer.map((a, i) => a + predictions[al * blockLen + i]);
-      output_result = Float32Concat(
-        output_result,
-        out_buffer.slice(0, block_shift)
-      );
-    }
-  }
-  return output_result;
+    return output_result;
 }
 
 /**
  * This function gets called on windows.onload function and loads dtln model
- * @param {relative path of the tensorflow js model} path
+ * @param {relative path of the tensorflow js model} path 
  */
 function load_model(path) {
     loadDTLN_model(path).then(
@@ -361,9 +369,9 @@ function load_model(path) {
 
 /**
  * This method willbe used to debug the model at layer by layer level
- * @param {*} inp
- * @param {*} model
- * @returns
+ * @param {*} inp 
+ * @param {*} model 
+ * @returns 
  */
 async function predictAudioSuperSync(inp, model) {
     // sftp

@@ -831,13 +831,15 @@ class RTCUtils extends Listenable {
                     .connect(scriptNode)
                     .connect(destinationStreamSource);
                 window.allStreams.push(destinationStreamSource);
-                mediaStreamsMetaData.push({
-                    stream: window.destinationStreamSource.stream,
-                    track: window.destinationStreamSource.stream.getAudioTracks()[0],
-                    effects: otherOptions.effects,
+                destinationStreamSource.stream.otherDetails = {
                     microphoneSource: microphoneSource,
                     scriptNode: scriptNode,
                     destinationStreamSource: destinationStreamSource,
+                };
+                mediaStreamsMetaData.push({
+                    stream: destinationStreamSource.stream,
+                    track: destinationStreamSource.stream.getAudioTracks()[0],
+                    effects: otherOptions.effects,
                 });
                 // microphoneSource.onended = function () {
                 //     microphoneSource.disconnect(scriptNode);
@@ -867,16 +869,10 @@ class RTCUtils extends Listenable {
             .catch((error) => {
                 mediaStreamsMetaData.forEach(
                     ({
-                        stream,
-                        microphoneSource,
-                        scriptNode,
-                        destinationStreamSource,
+                        stream
                     }) => {
                         this.stopMediaStream(
-                            stream,
-                            microphoneSource,
-                            scriptNode,
-                            destinationStreamSource
+                            stream
                         );
                     }
                 );
@@ -916,19 +912,25 @@ class RTCUtils extends Listenable {
      * @param mediaStream MediaStream object to stop.
      */
     stopMediaStream(
-        mediaStream,
-        microphoneSource,
-        scriptNode,
-        destinationStreamSource
+        mediaStream
     ) {
         if (!mediaStream) {
             return;
         }
         try{
-            if (microphoneSource && scriptNode && destinationStreamSource){
-                microphoneSource.mediaStream.getAudioTracks()[0].stop();
-                microphoneSource.disconnect(scriptNode);
-                scriptNode.disconnect(destinationStreamSource);
+            if (mediaStream.otherDetails) {
+                console.warn('CLEANING UP OLD STREAM');
+                let {
+                    microphoneSource,
+                    scriptNode,
+                    destinationStreamSource,
+                } = mediaStream.otherDetails;
+                if (microphoneSource && scriptNode && destinationStreamSource) {
+                    microphoneSource.mediaStream.getAudioTracks()[0].stop();
+                    microphoneSource.disconnect(scriptNode);
+                    scriptNode.disconnect(destinationStreamSource);
+                    console.warn("Stopped Processor");
+                }
             }
         }catch(e){
             alert('error')

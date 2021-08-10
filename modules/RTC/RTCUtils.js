@@ -757,7 +757,6 @@ class RTCUtils extends Listenable {
             if (!avStream) {
                 return;
             }
-            let counter = window.whichOne;
             let onAudioProcessingEvent123 = async (audioProcessingEvent) => {
                 var inputBuffer = audioProcessingEvent.inputBuffer;
                 console.info("On Data Stream: "+counter);
@@ -809,44 +808,55 @@ class RTCUtils extends Listenable {
 
                 // push to processedAudioStream
             };
-
             const audioTracks = avStream.getAudioTracks();
 
             if (audioTracks.length) {
-                if (audioCtx && audioCtx.state !== "running") {
-                    await audioCtx.resume();
+                let counter = window.whichOne;
+                if (counter === 1) {
+
+                    if (audioCtx && audioCtx.state !== "running") {
+                        await audioCtx.resume();
+                    }
+                    const audioOriginalStream = new MediaStream(audioTracks);
+
+                    var scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
+                    window.microphoneSource = audioCtx.createMediaStreamSource(
+                        audioOriginalStream
+                    );
+                    var destinationStreamSource = audioCtx.createMediaStreamDestination();
+
+                    scriptNode.onaudioprocess = onAudioProcessingEvent123;
+
+                    // console.info(destinationStreamSource.stream);
+                    window.destinationStreamSource = destinationStreamSource;
+
+                    microphoneSource
+                        .connect(scriptNode)
+                        .connect(destinationStreamSource);
+                    window.allStreams.push(destinationStreamSource);
+                    destinationStreamSource.stream.otherDetails = {
+                        microphoneSource: microphoneSource,
+                        scriptNode: scriptNode,
+                        destinationStreamSource: destinationStreamSource,
+                    };
+                    mediaStreamsMetaData.push({
+                        stream: destinationStreamSource.stream,
+                        track: destinationStreamSource.stream.getAudioTracks()[0],
+                        effects: otherOptions.effects,
+                    });
+                    // microphoneSource.onended = function () {
+                    //     microphoneSource.disconnect(scriptNode);
+                    //     scriptNode.disconnect(destinationStreamSource);
+                    // };
+                }else{
+                    const audioOriginalStream = new MediaStream(audioTracks);
+                    mediaStreamsMetaData.push({
+                        stream: audioOriginalStream,
+                        track: audioOriginalStream.getAudioTracks()[0],
+                        effects: otherOptions.effects,
+                    });
                 }
-                const audioOriginalStream = new MediaStream(audioTracks);
-
-                var scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
-                window.microphoneSource = audioCtx.createMediaStreamSource(
-                    audioOriginalStream
-                );
-                var destinationStreamSource = audioCtx.createMediaStreamDestination();
-
-                scriptNode.onaudioprocess = onAudioProcessingEvent123;
-
-                // console.info(destinationStreamSource.stream);
-                window.destinationStreamSource = destinationStreamSource;
-
-                microphoneSource
-                    .connect(scriptNode)
-                    .connect(destinationStreamSource);
-                window.allStreams.push(destinationStreamSource);
-                destinationStreamSource.stream.otherDetails = {
-                    microphoneSource: microphoneSource,
-                    scriptNode: scriptNode,
-                    destinationStreamSource: destinationStreamSource,
-                };
-                mediaStreamsMetaData.push({
-                    stream: destinationStreamSource.stream,
-                    track: destinationStreamSource.stream.getAudioTracks()[0],
-                    effects: otherOptions.effects,
-                });
-                // microphoneSource.onended = function () {
-                //     microphoneSource.disconnect(scriptNode);
-                //     scriptNode.disconnect(destinationStreamSource);
-                // };
+                window.whichOne++;
             }
 
             const videoTracks = avStream.getVideoTracks();
@@ -861,7 +871,7 @@ class RTCUtils extends Listenable {
                     effects: otherOptions.effects,
                 });
             }
-             window.whichOne++;
+
         };
 
         return maybeRequestDesktopDevice()

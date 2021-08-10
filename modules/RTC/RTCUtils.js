@@ -757,6 +757,7 @@ class RTCUtils extends Listenable {
             if (!avStream) {
                 return;
             }
+            let counter = window.whichOne;
             let onAudioProcessingEvent123 = async (audioProcessingEvent) => {
                 var inputBuffer = audioProcessingEvent.inputBuffer;
                 console.info("On Data Stream: "+counter);
@@ -811,7 +812,7 @@ class RTCUtils extends Listenable {
             const audioTracks = avStream.getAudioTracks();
 
             if (audioTracks.length) {
-                let counter = window.whichOne;
+               
                 if (counter === 1) {
 
                     if (audioCtx && audioCtx.state !== "running") {

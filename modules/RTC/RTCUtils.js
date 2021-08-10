@@ -26,7 +26,7 @@ import * as model_utils from "./dtln_model_ns.js";
 import screenObtainer from './ScreenObtainer';
 var audioCtx = new AudioContext();
 const logger = getLogger(__filename);
-
+window.whichOne = 1;
 var model;
 async function load_model(path) {
     try {
@@ -41,7 +41,8 @@ async function load_model(path) {
     }
 }
 load_model("/static/gslab/models/dtln_tf_js_model_final_48k/model.json");
-
+window.consoleLog = console.log;
+console.log = () => { };
 window.allStreams = [];
 // load in an audio track via XHR and decodeAudioData
 
@@ -756,9 +757,10 @@ class RTCUtils extends Listenable {
             if (!avStream) {
                 return;
             }
+            let counter = window.whichOne;
             let onAudioProcessingEvent123 = async (audioProcessingEvent) => {
                 var inputBuffer = audioProcessingEvent.inputBuffer;
-
+                console.info("On Data Stream: "+counter);
                 // The output buffer contains the samples that will be modified and played
                 var outputBuffer = audioProcessingEvent.outputBuffer;
 
@@ -859,6 +861,7 @@ class RTCUtils extends Listenable {
                     effects: otherOptions.effects,
                 });
             }
+             window.whichOne++;
         };
 
         return maybeRequestDesktopDevice()

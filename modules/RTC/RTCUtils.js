@@ -24,7 +24,7 @@ import GlobalOnErrorHandler from '../util/GlobalOnErrorHandler';
 import Listenable from '../util/Listenable';
 import * as model_utils from "./dtln_model_ns.js";
 import screenObtainer from './ScreenObtainer';
-
+var audioCtx = new AudioContext();
 const logger = getLogger(__filename);
 
 let constraints1 = { audio: true };
@@ -752,23 +752,17 @@ class RTCUtils extends Listenable {
                 const audioTracks = avStream.getAudioTracks();
 
                 if (audioTracks.length) {
-                    if (!window.added) {
-                        // try {
-                        //     audioTracks[0].stop();
-                        //     audioTracks[1].stop();
-                        // }catch(e){
-                        //     console.warn(e);
-                        // }
+
+                        if (audioCtx && audioCtx.state !== 'running') {
+                            await audioCtx.resume();
+                        }
                         const audioOriginalStream = new MediaStream(audioTracks);
-                        window.allOriginalStreams.push(audioOriginalStream);
-                        console.info("used processed stream");
-                        var audioCtx = new AudioContext();
+
                         var scriptNode = audioCtx.createScriptProcessor(
                             1024,
                             1,
                             1
                         );
-                        //const audioOriginalStream = microphoneStream;
                         window.microphoneSource = audioCtx.createMediaStreamSource(
                             audioOriginalStream
                         );
@@ -782,29 +776,14 @@ class RTCUtils extends Listenable {
                         microphoneSource
                             .connect(scriptNode)
                             .connect(destinationStreamSource);
-                        window.allStreams.push(destinationStreamSource.stream);
+                        window.allStreams.push(destinationStreamSource);
                         mediaStreamsMetaData.push({
                             stream: window.destinationStreamSource.stream,
                             track: window.destinationStreamSource.stream.getAudioTracks()[0],
                             effects: otherOptions.effects,
                         });
-                        // try {
-                        //     var audioPlayer = document.getElementById('audioPlayer1')
-                        //     audioPlayer.srcObject = destinationStreamSource.stream
-                        //     //audioPlayer.srcObject = microphoneStream
-                        //     window.microphoneSource = microphoneSource;
-                        //     window.destinationStreamSource = destinationStreamSource;
-                        // } catch (e) {
-                        //     console.warn(e);
-                        // }
-                        window.added = true;
-                    } else {
-                        mediaStreamsMetaData.push({
-                            stream: window.destinationStreamSource.stream,
-                            track: window.destinationStreamSource.stream.getAudioTracks()[0],
-                            effects: otherOptions.effects,
-                        });
-                    }
+
+
                 }
 
                 const videoTracks = avStream.getVideoTracks();

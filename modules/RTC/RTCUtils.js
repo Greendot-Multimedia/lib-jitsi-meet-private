@@ -718,7 +718,7 @@ class RTCUtils extends Listenable {
          * video track.
          * @returns {void}
          */
-        const maybeCreateAndAddAVTracks = function(avStream) {
+        const maybeCreateAndAddAVTracks = async function(avStream) {
             if (!avStream) {
                 return;
             }

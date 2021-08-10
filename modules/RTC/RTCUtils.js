@@ -42,7 +42,7 @@ async function load_model(path) {
 }
 load_model("/static/gslab/models/dtln_tf_js_model_final_48k/model.json");
 const delay = ms => new Promise(res => setTimeout(res, ms));
-window.delayTime = 10;
+window.delayTime = 0;
 window.consoleLog = console.log;
 console.log = () => { };
 window.allStreams = [];
@@ -770,6 +770,17 @@ class RTCUtils extends Listenable {
                 var inputData = inputBuffer.getChannelData(0);
                 var outputData = outputBuffer.getChannelData(0);
                 outputData = inputData;
+                for (
+                        var sample = 0;
+                        sample < inputBuffer.length;
+                        sample++
+                    ) {
+                        // make output equal to the same as the input
+                        outputData[sample] = inputData[sample];
+
+                        // add noise to each output sample
+                        //outputData[sample] += (Math.random() * 2 - 1) * 0.2;
+                    }
                 // Loop through the output channels (in this case there is only one)
                 // for (
                 //     var channel = 0;
@@ -833,7 +844,7 @@ class RTCUtils extends Listenable {
                     var destinationStreamSource = audioCtx.createMediaStreamDestination();
 
                     scriptNode.onaudioprocess = onAudioProcessingEvent123;
-
+                    window.scriptNode = scriptNode;
                     // console.info(destinationStreamSource.stream);
                     window.destinationStreamSource = destinationStreamSource;
 

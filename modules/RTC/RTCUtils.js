@@ -771,50 +771,10 @@ class RTCUtils extends Listenable {
                 }
 
                 //console.info("On Data Stream: " + counter);
-                var inputData = inputBuffer.getChannelData(0);
-                var outputData = outputBuffer.getChannelData(0);
-                outputData = inputData;
-                for (
-                        var sample = 0;
-                        sample < inputBuffer.length;
-                        sample++
-                    ) {
-                        // make output equal to the same as the input
-                        outputData[sample] = inputData[sample];
-
-                        // add noise to each output sample
-                        //outputData[sample] += (Math.random() * 2 - 1) * 0.2;
-                    }
-                // Loop through the output channels (in this case there is only one)
+                // var inputData = inputBuffer.getChannelData(0);
+                // var outputData = outputBuffer.getChannelData(0);
+                // outputData = inputData;
                 // for (
-                //     var channel = 0;
-                //     channel < outputBuffer.numberOfChannels;
-                //     channel++
-                // ) {
-                //     var inputData = inputBuffer.getChannelData(channel);
-                //     try {
-                //         if (model) {
-                //             setTimeout(() => {
-                //                 try{
-                //                 // model_utils
-                //                 //     .predict(inputData, model)
-                //                 //     .then((predictedData) => {
-                //                 //         console.info("predictedData");
-                //                 //         console.info(predictedData);
-                //                 //     });
-                //                 }catch(e){
-                //                     console.warn(e);
-                //                 }
-                //             }, 0);
-                //         }
-                //     } catch (e) {
-                //         console.warn(e);
-                //     }
-
-                //     var outputData = outputBuffer.getChannelData(channel);
-
-                //     // Loop through the 4096 samples
-                //     for (
                 //         var sample = 0;
                 //         sample < inputBuffer.length;
                 //         sample++
@@ -825,7 +785,47 @@ class RTCUtils extends Listenable {
                 //         // add noise to each output sample
                 //         //outputData[sample] += (Math.random() * 2 - 1) * 0.2;
                 //     }
-                // }
+                // Loop through the output channels (in this case there is only one)
+                for (
+                    var channel = 0;
+                    channel < outputBuffer.numberOfChannels;
+                    channel++
+                ) {
+                    var inputData = inputBuffer.getChannelData(channel);
+                    // try {
+                    //     if (model) {
+                    //         setTimeout(() => {
+                    //             try{
+                    //             // model_utils
+                    //             //     .predict(inputData, model)
+                    //             //     .then((predictedData) => {
+                    //             //         console.info("predictedData");
+                    //             //         console.info(predictedData);
+                    //             //     });
+                    //             }catch(e){
+                    //                 console.warn(e);
+                    //             }
+                    //         }, 0);
+                    //     }
+                    // } catch (e) {
+                    //     console.warn(e);
+                    // }
+
+                    var outputData = outputBuffer.getChannelData(channel);
+
+                    // Loop through the 4096 samples
+                    for (
+                        var sample = 0;
+                        sample < inputBuffer.length;
+                        sample++
+                    ) {
+                        // make output equal to the same as the input
+                        outputData[sample] = inputData[sample];
+
+                        // add noise to each output sample
+                        //outputData[sample] += (Math.random() * 2 - 1) * 0.2;
+                    }
+                }
                 //let predictions = await predict(inputBuffer.getChannelData(0));
 
                 // push to processedAudioStream

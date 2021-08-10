@@ -27,8 +27,6 @@ import screenObtainer from './ScreenObtainer';
 var audioCtx = new AudioContext();
 const logger = getLogger(__filename);
 
-import * as model_utils from "./models/dtln_model_ns.js";
-
 var model;
 async function load_model(path) {
     try {

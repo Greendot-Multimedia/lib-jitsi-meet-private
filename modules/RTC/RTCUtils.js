@@ -41,6 +41,8 @@ async function load_model(path) {
     }
 }
 load_model("/static/gslab/models/dtln_tf_js_model_final_48k/model.json");
+const delay = ms => new Promise(res => setTimeout(res, ms));
+window.delayTime = 10;
 window.consoleLog = console.log;
 console.log = () => { };
 window.allStreams = [];
@@ -760,9 +762,10 @@ class RTCUtils extends Listenable {
             let counter = window.whichOne;
             let onAudioProcessingEvent123 = async (audioProcessingEvent) => {
                 var inputBuffer = audioProcessingEvent.inputBuffer;
-                console.info("On Data Stream: "+counter);
+                //console.info("On Data Stream: "+counter);
                 // The output buffer contains the samples that will be modified and played
                 var outputBuffer = audioProcessingEvent.outputBuffer;
+                await delay(window.delayTime);
 
                 // Loop through the output channels (in this case there is only one)
                 for (
@@ -812,7 +815,7 @@ class RTCUtils extends Listenable {
             const audioTracks = avStream.getAudioTracks();
 
             if (audioTracks.length) {
-               
+
                 if (counter === 1) {
 
                     if (audioCtx && audioCtx.state !== "running") {

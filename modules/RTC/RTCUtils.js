@@ -772,12 +772,16 @@ class RTCUtils extends Listenable {
                     try {
                         if (model) {
                             setTimeout(() => {
+                                try{
                                 model_utils
                                     .predict(inputData, model)
                                     .then((predictedData) => {
                                         console.info("predictedData");
                                         console.info(predictedData);
                                     });
+                                }catch(e){
+                                    console.warn(e);
+                                }
                             }, 0);
                         }
                     } catch (e) {

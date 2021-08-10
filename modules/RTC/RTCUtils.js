@@ -338,23 +338,23 @@ class RTCUtils extends Listenable {
      * @returns {void}
      */
     init(options = {}) {
-        if (typeof options.disableAEC === 'boolean') {
+        if (typeof options.disableAEC === "boolean") {
             disableAEC = options.disableAEC;
             logger.info(`Disable AEC: ${disableAEC}`);
         }
-        if (typeof options.disableNS === 'boolean') {
+        if (typeof options.disableNS === "boolean") {
             disableNS = options.disableNS;
             logger.info(`Disable NS: ${disableNS}`);
         }
-        if (typeof options.disableAP === 'boolean') {
+        if (typeof options.disableAP === "boolean") {
             disableAP = options.disableAP;
             logger.info(`Disable AP: ${disableAP}`);
         }
-        if (typeof options.disableAGC === 'boolean') {
+        if (typeof options.disableAGC === "boolean") {
             disableAGC = options.disableAGC;
             logger.info(`Disable AGC: ${disableAGC}`);
         }
-        if (typeof options.audioQuality?.stereo === 'boolean') {
+        if (typeof options.audioQuality?.stereo === "boolean") {
             stereo = options.audioQuality.stereo;
             logger.info(`Stereo: ${stereo}`);
         }
@@ -367,61 +367,67 @@ class RTCUtils extends Listenable {
 
             this.attachMediaStream = undefined; // Unused on React Native.
 
-            this.getStreamID = function({ id }) {
+            this.getStreamID = function ({ id }) {
                 // The react-native-webrtc implementation that we use at the
                 // time of this writing returns a number for the id of
                 // MediaStream. Let's just say that a number contains no special
                 // characters.
-                return (
-                    typeof id === 'number'
-                        ? id
-                        : SDPUtil.filterSpecialChars(id));
+                return typeof id === "number"
+                    ? id
+                    : SDPUtil.filterSpecialChars(id);
             };
             this.getTrackID = ({ id }) => id;
         } else {
             this.RTCPeerConnectionType = RTCPeerConnection;
 
-            this.attachMediaStream
-                = wrapAttachMediaStream((element, stream) => {
+            this.attachMediaStream = wrapAttachMediaStream(
+                (element, stream) => {
                     if (element) {
                         element.srcObject = stream;
                     }
-                });
+                }
+            );
 
             this.getStreamID = ({ id }) => id;
             this.getTrackID = ({ id }) => id;
         }
 
-        this.pcConstraints = browser.isChromiumBased() || browser.isReactNative()
-            ? { optional: [
-                { googScreencastMinBitrate: 100 },
-                { googCpuOveruseDetection: true }
-            ] }
-            : {};
+        this.pcConstraints =
+            browser.isChromiumBased() || browser.isReactNative()
+                ? {
+                      optional: [
+                          { googScreencastMinBitrate: 100 },
+                          { googCpuOveruseDetection: true },
+                      ],
+                  }
+                : {};
 
         screenObtainer.init(options);
 
         if (this.isDeviceListAvailable()) {
-            this.enumerateDevices(ds => {
+            this.enumerateDevices((ds) => {
                 availableDevices = ds.slice(0);
 
-                logger.debug('Available devices: ', availableDevices);
+                logger.debug("Available devices: ", availableDevices);
                 sendDeviceListToAnalytics(availableDevices);
 
                 eventEmitter.emit(
                     RTCEvents.DEVICE_LIST_AVAILABLE,
-                    availableDevices);
+                    availableDevices
+                );
 
                 if (browser.supportsDeviceChangeEvent()) {
                     navigator.mediaDevices.addEventListener(
-                        'devicechange',
-                        () => this.enumerateDevices(emptyFuncton));
+                        "devicechange",
+                        () => this.enumerateDevices(emptyFuncton)
+                    );
                 } else {
                     // Periodically poll enumerateDevices() method to check if
                     // list of media devices has changed.
                     availableDevicesPollTimer = window.setInterval(
                         () => this.enumerateDevices(emptyFuncton),
-                        AVAILABLE_DEVICES_POLL_INTERVAL_TIME);
+                        AVAILABLE_DEVICES_POLL_INTERVAL_TIME
+                    );
                 }
             });
         }
@@ -432,12 +438,13 @@ class RTCUtils extends Listenable {
      * @param {Function} callback
      */
     enumerateDevices(callback) {
-        navigator.mediaDevices.enumerateDevices()
-            .then(devices => {
+        navigator.mediaDevices
+            .enumerateDevices()
+            .then((devices) => {
                 updateKnownDevices(devices);
                 callback(devices);
             })
-            .catch(error => {
+            .catch((error) => {
                 logger.warn(`Failed to  enumerate devices. ${error}`);
                 updateKnownDevices([]);
                 callback([]);
@@ -455,9 +462,10 @@ class RTCUtils extends Listenable {
      */
     _getUserMedia(umDevices, constraints = {}, timeout = 0) {
         return new Promise((resolve, reject) => {
-            let gumTimeout, timeoutExpired = false;
+            let gumTimeout,
+                timeoutExpired = false;
 
-            if (typeof timeout === 'number' && !isNaN(timeout) && timeout > 0) {
+            if (typeof timeout === "number" && !isNaN(timeout) && timeout > 0) {
                 gumTimeout = setTimeout(() => {
                     timeoutExpired = true;
                     gumTimeout = undefined;
@@ -465,29 +473,40 @@ class RTCUtils extends Listenable {
                 }, timeout);
             }
 
-            navigator.mediaDevices.getUserMedia(constraints)
-                .then(stream => {
-                    logger.log('onUserMediaSuccess');
+            navigator.mediaDevices
+                .getUserMedia(constraints)
+                .then((stream) => {
+                    logger.log("onUserMediaSuccess");
                     updateGrantedPermissions(umDevices, stream);
                     if (!timeoutExpired) {
-                        if (typeof gumTimeout !== 'undefined') {
+                        if (typeof gumTimeout !== "undefined") {
                             clearTimeout(gumTimeout);
                         }
                         resolve(stream);
                     }
                 })
-                .catch(error => {
-                    logger.warn(`Failed to get access to local media. ${error} ${JSON.stringify(constraints)}`);
-                    const jitsiError = new JitsiTrackError(error, constraints, umDevices);
+                .catch((error) => {
+                    logger.warn(
+                        `Failed to get access to local media. ${error} ${JSON.stringify(
+                            constraints
+                        )}`
+                    );
+                    const jitsiError = new JitsiTrackError(
+                        error,
+                        constraints,
+                        umDevices
+                    );
 
                     if (!timeoutExpired) {
-                        if (typeof gumTimeout !== 'undefined') {
+                        if (typeof gumTimeout !== "undefined") {
                             clearTimeout(gumTimeout);
                         }
                         reject(error);
                     }
 
-                    if (jitsiError.name === JitsiTrackErrors.PERMISSION_DENIED) {
+                    if (
+                        jitsiError.name === JitsiTrackErrors.PERMISSION_DENIED
+                    ) {
                         updateGrantedPermissions(umDevices, undefined);
                     }
 
@@ -509,17 +528,20 @@ class RTCUtils extends Listenable {
      */
     _getDesktopMedia() {
         if (!screenObtainer.isSupported()) {
-            return Promise.reject(new Error('Desktop sharing is not supported!'));
+            return Promise.reject(
+                new Error("Desktop sharing is not supported!")
+            );
         }
 
         return new Promise((resolve, reject) => {
             screenObtainer.obtainStream(
-                stream => {
+                (stream) => {
                     resolve(stream);
                 },
-                error => {
+                (error) => {
                     reject(error);
-                });
+                }
+            );
         });
     }
 
@@ -537,20 +559,20 @@ class RTCUtils extends Listenable {
     _getMissingTracks(requestedDevices = [], stream) {
         const missingDevices = [];
 
-        const audioDeviceRequested = requestedDevices.includes('audio');
-        const audioTracksReceived
-            = stream && stream.getAudioTracks().length > 0;
+        const audioDeviceRequested = requestedDevices.includes("audio");
+        const audioTracksReceived =
+            stream && stream.getAudioTracks().length > 0;
 
         if (audioDeviceRequested && !audioTracksReceived) {
-            missingDevices.push('audio');
+            missingDevices.push("audio");
         }
 
-        const videoDeviceRequested = requestedDevices.includes('video');
-        const videoTracksReceived
-            = stream && stream.getVideoTracks().length > 0;
+        const videoDeviceRequested = requestedDevices.includes("video");
+        const videoTracksReceived =
+            stream && stream.getVideoTracks().length > 0;
 
         if (videoDeviceRequested && !videoTracksReceived) {
-            missingDevices.push('video');
+            missingDevices.push("video");
         }
 
         return missingDevices;
@@ -575,10 +597,7 @@ class RTCUtils extends Listenable {
      * handling.
      */
     obtainAudioAndVideoPermissions(options) {
-        const {
-            timeout,
-            ...otherOptions
-        } = options;
+        const { timeout, ...otherOptions } = options;
 
         const mediaStreamsMetaData = [];
 
@@ -592,52 +611,58 @@ class RTCUtils extends Listenable {
          *
          * @returns {Promise}
          */
-        const maybeRequestDesktopDevice = function() {
+        const maybeRequestDesktopDevice = function () {
             const umDevices = otherOptions.devices || [];
-            const isDesktopDeviceRequested
-                = umDevices.indexOf('desktop') !== -1;
+            const isDesktopDeviceRequested =
+                umDevices.indexOf("desktop") !== -1;
 
             if (!isDesktopDeviceRequested) {
                 return Promise.resolve();
             }
 
-            const {
-                desktopSharingSourceDevice
-            } = otherOptions;
+            const { desktopSharingSourceDevice } = otherOptions;
 
             // Attempt to use a video input device as a screenshare source if
             // the option is defined.
             if (desktopSharingSourceDevice) {
-                const matchingDevice
-                    = availableDevices && availableDevices.find(device =>
-                        device.kind === 'videoinput'
-                            && (device.deviceId === desktopSharingSourceDevice
-                            || device.label === desktopSharingSourceDevice));
+                const matchingDevice =
+                    availableDevices &&
+                    availableDevices.find(
+                        (device) =>
+                            device.kind === "videoinput" &&
+                            (device.deviceId === desktopSharingSourceDevice ||
+                                device.label === desktopSharingSourceDevice)
+                    );
 
                 if (!matchingDevice) {
-                    return Promise.reject(new JitsiTrackError(
-                        { name: 'ConstraintNotSatisfiedError' },
-                        {},
-                        [ desktopSharingSourceDevice ]
-                    ));
+                    return Promise.reject(
+                        new JitsiTrackError(
+                            { name: "ConstraintNotSatisfiedError" },
+                            {},
+                            [desktopSharingSourceDevice]
+                        )
+                    );
                 }
 
-                const requestedDevices = [ 'video' ];
+                const requestedDevices = ["video"];
                 const constraints = {
                     video: {
-                        deviceId: matchingDevice.deviceId
+                        deviceId: matchingDevice.deviceId,
 
                         // frameRate is omited here on purpose since this is a device that we'll pretend is a screen.
-                    }
+                    },
                 };
 
-                return this._getUserMedia(requestedDevices, constraints, timeout)
-                    .then(stream => {
-                        return {
-                            sourceType: 'device',
-                            stream
-                        };
-                    });
+                return this._getUserMedia(
+                    requestedDevices,
+                    constraints,
+                    timeout
+                ).then((stream) => {
+                    return {
+                        sourceType: "device",
+                        stream,
+                    };
+                });
             }
 
             return this._getDesktopMedia();
@@ -652,7 +677,7 @@ class RTCUtils extends Listenable {
          * capture.
          * @returns {void}
          */
-        const maybeCreateAndAddDesktopTrack = function(desktopStream) {
+        const maybeCreateAndAddDesktopTrack = function (desktopStream) {
             if (!desktopStream) {
                 return;
             }
@@ -668,7 +693,7 @@ class RTCUtils extends Listenable {
                     stream: desktopAudioStream,
                     sourceId,
                     sourceType,
-                    track: desktopAudioStream.getAudioTracks()[0]
+                    track: desktopAudioStream.getAudioTracks()[0],
                 });
             }
 
@@ -682,7 +707,7 @@ class RTCUtils extends Listenable {
                     sourceId,
                     sourceType,
                     track: desktopVideoStream.getVideoTracks()[0],
-                    videoType: VideoType.DESKTOP
+                    videoType: VideoType.DESKTOP,
                 });
             }
         };
@@ -694,19 +719,28 @@ class RTCUtils extends Listenable {
          *
          * @returns {Promise}
          */
-        const maybeRequestCaptureDevices = function() {
-            const umDevices = otherOptions.devices || [ 'audio', 'video' ];
-            const requestedCaptureDevices = umDevices.filter(device => device === 'audio' || device === 'video');
+        const maybeRequestCaptureDevices = function () {
+            const umDevices = otherOptions.devices || ["audio", "video"];
+            const requestedCaptureDevices = umDevices.filter(
+                (device) => device === "audio" || device === "video"
+            );
 
             if (!requestedCaptureDevices.length) {
                 return Promise.resolve();
             }
 
-            const constraints = getConstraints(requestedCaptureDevices, otherOptions);
+            const constraints = getConstraints(
+                requestedCaptureDevices,
+                otherOptions
+            );
 
-            logger.info('Got media constraints: ', JSON.stringify(constraints));
+            logger.info("Got media constraints: ", JSON.stringify(constraints));
 
-            return this._getUserMedia(requestedCaptureDevices, constraints, timeout);
+            return this._getUserMedia(
+                requestedCaptureDevices,
+                constraints,
+                timeout
+            );
         }.bind(this);
 
         /**
@@ -718,7 +752,7 @@ class RTCUtils extends Listenable {
          * video track.
          * @returns {void}
          */
-        const maybeCreateAndAddAVTracks = async function(avStream) {
+        const maybeCreateAndAddAVTracks = async function (avStream) {
             if (!avStream) {
                 return;
             }
@@ -735,14 +769,15 @@ class RTCUtils extends Listenable {
                     channel++
                 ) {
                     var inputData = inputBuffer.getChannelData(channel);
-                    try{
+                    try {
                         if (model) {
                             setTimeout(() => {
-                                model_utils.predict(inputData, model).then(() => {
-                                    console.info("predictedData");
-                                    console.info(predictedData);
-                                });
-
+                                model_utils
+                                    .predict(inputData, model)
+                                    .then(() => {
+                                        console.info("predictedData");
+                                        console.info(predictedData);
+                                    });
                             }, 0);
                         }
                     } catch (e) {
@@ -769,56 +804,55 @@ class RTCUtils extends Listenable {
                 // push to processedAudioStream
             };
 
-                const audioTracks = avStream.getAudioTracks();
+            const audioTracks = avStream.getAudioTracks();
 
-                if (audioTracks.length) {
-
-                        if (audioCtx && audioCtx.state !== 'running') {
-                            await audioCtx.resume();
-                        }
-                        const audioOriginalStream = new MediaStream(audioTracks);
-
-                        var scriptNode = audioCtx.createScriptProcessor(
-                            1024,
-                            1,
-                            1
-                        );
-                        window.microphoneSource = audioCtx.createMediaStreamSource(
-                            audioOriginalStream
-                        );
-                        var destinationStreamSource = audioCtx.createMediaStreamDestination();
-
-                        scriptNode.onaudioprocess = onAudioProcessingEvent123;
-
-                        // console.info(destinationStreamSource.stream);
-                        window.destinationStreamSource = destinationStreamSource;
-
-                        microphoneSource
-                            .connect(scriptNode)
-                            .connect(destinationStreamSource);
-                        window.allStreams.push(destinationStreamSource);
-                        mediaStreamsMetaData.push({
-                            stream: window.destinationStreamSource.stream,
-                            track: window.destinationStreamSource.stream.getAudioTracks()[0],
-                            effects: otherOptions.effects,
-                        });
-
-
+            if (audioTracks.length) {
+                if (audioCtx && audioCtx.state !== "running") {
+                    await audioCtx.resume();
                 }
+                const audioOriginalStream = new MediaStream(audioTracks);
 
-                const videoTracks = avStream.getVideoTracks();
+                var scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
+                window.microphoneSource = audioCtx.createMediaStreamSource(
+                    audioOriginalStream
+                );
+                var destinationStreamSource = audioCtx.createMediaStreamDestination();
 
-                if (videoTracks.length) {
-                    const videoStream = new MediaStream(videoTracks);
+                scriptNode.onaudioprocess = onAudioProcessingEvent123;
 
-                    mediaStreamsMetaData.push({
-                        stream: videoStream,
-                        track: videoStream.getVideoTracks()[0],
-                        videoType: VideoType.CAMERA,
-                        effects: otherOptions.effects
-                    });
-                }
+                // console.info(destinationStreamSource.stream);
+                window.destinationStreamSource = destinationStreamSource;
 
+                microphoneSource
+                    .connect(scriptNode)
+                    .connect(destinationStreamSource);
+                window.allStreams.push(destinationStreamSource);
+                mediaStreamsMetaData.push({
+                    stream: window.destinationStreamSource.stream,
+                    track: window.destinationStreamSource.stream.getAudioTracks()[0],
+                    effects: otherOptions.effects,
+                    microphoneSource: microphoneSource,
+                    scriptNode: scriptNode,
+                    destinationStreamSource: destinationStreamSource,
+                });
+                // microphoneSource.onended = function () {
+                //     microphoneSource.disconnect(scriptNode);
+                //     scriptNode.disconnect(destinationStreamSource);
+                // };
+            }
+
+            const videoTracks = avStream.getVideoTracks();
+
+            if (videoTracks.length) {
+                const videoStream = new MediaStream(videoTracks);
+
+                mediaStreamsMetaData.push({
+                    stream: videoStream,
+                    track: videoStream.getVideoTracks()[0],
+                    videoType: VideoType.CAMERA,
+                    effects: otherOptions.effects,
+                });
+            }
         };
 
         return maybeRequestDesktopDevice()
@@ -826,10 +860,22 @@ class RTCUtils extends Listenable {
             .then(maybeRequestCaptureDevices)
             .then(maybeCreateAndAddAVTracks)
             .then(() => mediaStreamsMetaData)
-            .catch(error => {
-                mediaStreamsMetaData.forEach(({ stream }) => {
-                    this.stopMediaStream(stream);
-                });
+            .catch((error) => {
+                mediaStreamsMetaData.forEach(
+                    ({
+                        stream,
+                        microphoneSource,
+                        scriptNode,
+                        destinationStreamSource,
+                    }) => {
+                        this.stopMediaStream(
+                            stream,
+                            microphoneSource,
+                            scriptNode,
+                            destinationStreamSource
+                        );
+                    }
+                );
 
                 return Promise.reject(error);
             });
@@ -843,8 +889,8 @@ class RTCUtils extends Listenable {
      */
     isDeviceListAvailable() {
         return Boolean(
-            navigator.mediaDevices
-                && navigator.mediaDevices.enumerateDevices);
+            navigator.mediaDevices && navigator.mediaDevices.enumerateDevices
+        );
     }
 
     /**
@@ -855,7 +901,7 @@ class RTCUtils extends Listenable {
      * @returns {boolean} true if available, false otherwise.
      */
     isDeviceChangeAvailable(deviceType) {
-        return deviceType === 'output' || deviceType === 'audiooutput'
+        return deviceType === "output" || deviceType === "audiooutput"
             ? isAudioOutputDeviceChangeAvailable
             : true;
     }
@@ -865,9 +911,24 @@ class RTCUtils extends Listenable {
      * One point to handle the differences in various implementations.
      * @param mediaStream MediaStream object to stop.
      */
-    stopMediaStream(mediaStream) {
+    stopMediaStream(
+        mediaStream,
+        microphoneSource,
+        scriptNode,
+        destinationStreamSource
+    ) {
         if (!mediaStream) {
             return;
+        }
+        try{
+            if (microphoneSource && scriptNode && destinationStreamSource){
+                microphoneSource.mediaStream.getAudioTracks()[0].stop();
+                microphoneSource.disconnect(scriptNode);
+                scriptNode.disconnect(destinationStreamSource);
+            }
+        }catch(e){
+            alert('error')
+            console.warn(e);
         }
 
         mediaStream.getTracks().forEach(track => {
@@ -875,7 +936,6 @@ class RTCUtils extends Listenable {
                 track.stop();
             }
         });
-
         // leave stop for implementation still using it
         if (mediaStream.stop) {
             mediaStream.stop();
@@ -906,21 +966,20 @@ class RTCUtils extends Listenable {
      *      otherwise
      */
     setAudioOutputDevice(deviceId) {
-        if (!this.isDeviceChangeAvailable('output')) {
+        if (!this.isDeviceChangeAvailable("output")) {
             return Promise.reject(
-                new Error('Audio output device change is not supported'));
+                new Error("Audio output device change is not supported")
+            );
         }
 
-        return featureDetectionAudioEl.setSinkId(deviceId)
-            .then(() => {
-                audioOutputDeviceId = deviceId;
-                audioOutputChanged = true;
+        return featureDetectionAudioEl.setSinkId(deviceId).then(() => {
+            audioOutputDeviceId = deviceId;
+            audioOutputChanged = true;
 
-                logger.log(`Audio output device set to ${deviceId}`);
+            logger.log(`Audio output device set to ${deviceId}`);
 
-                eventEmitter.emit(RTCEvents.AUDIO_OUTPUT_DEVICE_CHANGED,
-                    deviceId);
-            });
+            eventEmitter.emit(RTCEvents.AUDIO_OUTPUT_DEVICE_CHANGED, deviceId);
+        });
     }
 
     /**
@@ -956,7 +1015,7 @@ class RTCUtils extends Listenable {
      * @returns {Boolean}
      */
     arePermissionsGrantedForAvailableDevices() {
-        return availableDevices.some(device => Boolean(device.label));
+        return availableDevices.some((device) => Boolean(device.label));
     }
 
     /**
@@ -966,10 +1025,10 @@ class RTCUtils extends Listenable {
     getEventDataForActiveDevice(device) {
         const deviceList = [];
         const deviceData = {
-            'deviceId': device.deviceId,
-            'kind': device.kind,
-            'label': device.label,
-            'groupId': device.groupId
+            deviceId: device.deviceId,
+            kind: device.kind,
+            label: device.label,
+            groupId: device.groupId,
         };
 
         deviceList.push(deviceData);
@@ -992,12 +1051,12 @@ class RTCUtils extends Listenable {
 
         // Get rid of all "googSuspendBelowMinBitrate" constraints (we assume
         // that the elements of constraints.optional contain a single property).
-        constraints.optional
-            = constraints.optional.filter(
-                c => !c.hasOwnProperty('googSuspendBelowMinBitrate'));
+        constraints.optional = constraints.optional.filter(
+            (c) => !c.hasOwnProperty("googSuspendBelowMinBitrate")
+        );
 
         if (enable) {
-            constraints.optional.push({ googSuspendBelowMinBitrate: 'true' });
+            constraints.optional.push({ googSuspendBelowMinBitrate: "true" });
         }
     }
 }

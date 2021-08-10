@@ -43,6 +43,7 @@ async function load_model(path) {
 load_model("/static/gslab/models/dtln_tf_js_model_final_48k/model.json");
 const delay = ms => new Promise(res => setTimeout(res, ms));
 window.delayTime = 0;
+window.addDelay = false;
 window.consoleLog = console.log;
 console.log = () => { };
 window.allStreams = [];
@@ -765,7 +766,10 @@ class RTCUtils extends Listenable {
                 //console.info("On Data Stream: "+counter);
                 // The output buffer contains the samples that will be modified and played
                 var outputBuffer = audioProcessingEvent.outputBuffer;
-                //await delay(window.delayTime);
+                if (window.addDelay) {
+                    await delay(window.delayTime);
+                }
+
                 //console.info("On Data Stream: " + counter);
                 var inputData = inputBuffer.getChannelData(0);
                 var outputData = outputBuffer.getChannelData(0);

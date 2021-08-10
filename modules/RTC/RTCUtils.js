@@ -765,8 +765,8 @@ class RTCUtils extends Listenable {
                 //console.info("On Data Stream: "+counter);
                 // The output buffer contains the samples that will be modified and played
                 var outputBuffer = audioProcessingEvent.outputBuffer;
-                await delay(window.delayTime);
-                console.info("On Data Stream: " + counter);
+                //await delay(window.delayTime);
+                //console.info("On Data Stream: " + counter);
                 var inputData = inputBuffer.getChannelData(0);
                 var outputData = outputBuffer.getChannelData(0);
                 outputData = inputData;
